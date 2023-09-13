@@ -27,3 +27,7 @@ scrapy crawl pexel -a count=30 -a query='Elon Mush Short Interview'
     count : Number of videos to crawl
     query : Query for searching video
 ```
+
+### Result:
+
+- The output will be stored in /videos folder with the name is the id of the video
