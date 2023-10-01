@@ -1,2 +1,13 @@
+## cache
 .DS_Store
 __pycache__
+
+# assets and configs
+*.dat
+*.yaml
+
+# media
+*.png
+*.jpg
+*.mp4
+*.mov
