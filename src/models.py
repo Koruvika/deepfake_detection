@@ -16,20 +16,21 @@ class SBIDetector(nn.Module):
         x = self.net(inputs)
         return x
 
-    def training_step(self, inputs, target):
-        # TODO: Maybe need to optimize SAM method
-        pred_first = None
-        for i in range(2):
-            pred = self(inputs)
-            if i == 0:
-                pred_first = pred
+    def train_step(self, inputs, target):
 
-            loss = self.loss_fn(pred, target)
-            self.optimizer.zero_grad()
-            loss.backward()
-            if i == 0:
-                self.optimizer.first_step(zero_grad=True)
-            else:
-                self.optimizer.second_step(zero_grad=True)
+        # first step
+        pred = self(inputs)
+        pred_first = pred.clone()
+        loss = self.loss_fn(pred, target)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.first_step(zero_grad=True)
+
+        # second step
+        pred = self(inputs)
+        loss = self.loss_fn(pred, target)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.second_step(zero_grad=True)
 
         return pred_first
