@@ -26,7 +26,7 @@ configs.dataset.num_workers = 6
 
 # opt
 configs.opt = CfgNode()
-configs.opt.epochs = 200
+configs.opt.epochs = 100
 configs.opt.learning_rate = 0.05
 configs.opt.momentum = 0.9
 configs.opt.weight_decay = 1e-4

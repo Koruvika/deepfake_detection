@@ -110,7 +110,6 @@ class SupConDataset(Dataset):
         image = self.contrast_transform(Image.fromarray(image))
         types = self.type_list[item]
 
-
         return image, label, types
 
     def reorder_landmark(self, landmark):
