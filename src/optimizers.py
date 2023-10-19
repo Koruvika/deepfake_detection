@@ -1,3 +1,5 @@
+import math
+import numpy as np
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
 
@@ -75,3 +77,28 @@ class LinearDecayLR(_LRScheduler):
         else:
             lr=b_lr
         return [lr]
+
+def adjust_learning_rate(configs, optimizer, epoch):
+    lr = configs.learning_rate
+    if configs.cosine:
+        eta_min = lr * (configs.lr_decay_rate ** 3)
+        lr = eta_min + (lr - eta_min) * (
+                1 + math.cos(math.pi * epoch / configs.epochs)) / 2
+    else:
+        steps = np.sum(epoch > np.asarray(configs.lr_decay_epochs))
+        if steps > 0:
+            lr = lr * (configs.lr_decay_rate ** steps)
+
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+
+def warmup_learning_rate(configs, epoch, batch_id, total_batches, optimizer):
+    if configs.warm and epoch <= configs.warm_epochs:
+        p = (batch_id + (epoch - 1) * total_batches) / \
+            (configs.warm_epochs * total_batches)
+        lr = configs.warmup_from + p * (configs.warmup_to - configs.warmup_from)
+
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+

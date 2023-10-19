@@ -13,7 +13,7 @@ import albumentations as alb
 import torch
 #
 # sys.path.insert(0, "")
-from .utils import RandomDownScale, random_get_hull, IoUfrom2bboxes, crop_face, dynamic_blend
+from src.utils import RandomDownScale, random_get_hull, IoUfrom2bboxes, crop_face, dynamic_blend
 
 
 def draw_landmarks(img_, landmarks):

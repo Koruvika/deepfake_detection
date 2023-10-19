@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 from efficientnet_pytorch import EfficientNet
 from torch import nn
 
@@ -17,7 +18,6 @@ class SBIDetector(nn.Module):
         return x
 
     def train_step(self, inputs, target):
-
         # first step
         pred = self(inputs)
         pred_first = pred.clone()
@@ -34,3 +34,4 @@ class SBIDetector(nn.Module):
         self.optimizer.second_step(zero_grad=True)
 
         return pred_first
+

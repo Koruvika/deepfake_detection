@@ -16,7 +16,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 sys.path.insert(0, "")
 from src import SBIFaceForencisDataset, SBIDetector, LinearDecayLR, compute_accuray
-from runs.SBITrainerConfigs import configs as SBITrainerConfig
+from runs.sbi_config import configs as SBITrainerConfig
 
 
 class SBITrainer:

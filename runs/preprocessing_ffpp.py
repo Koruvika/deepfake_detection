@@ -66,9 +66,11 @@ def facecrop(org_path, save_path, face_detector, face_predictor, num_frames=10):
 def main():
     parser = argparse.ArgumentParser()
     root = "/mnt/data/duongdhk/datasets/FFPP"
+    root_celeb = "/mnt/data/duongdhk/datasets/Celeb-DF-v2"
     parser.add_argument('-d', dest='dataset',
                         choices=['DeepFakeDetection_original', 'DeepFakeDetection', 'FaceShifter', 'Face2Face',
-                                 'Deepfakes', 'FaceSwap', 'NeuralTextures', 'Original'])
+                                 'Deepfakes', 'FaceSwap', 'NeuralTextures', 'Original',
+                                 'Celeb-real', 'Celeb-synthesis', 'YouTube-real'])
     parser.add_argument('-c', dest='comp', choices=['raw', 'c23', 'c40'], default='c23')
     parser.add_argument('-n', dest='num_frames', type=int, default=32)
     args = parser.parse_args()
@@ -78,8 +80,8 @@ def main():
         dataset_path = f'{root}/original_sequences/actors/{args.comp}/'
     elif args.dataset in ['DeepFakeDetection', 'FaceShifter', 'Face2Face', 'Deepfakes', 'FaceSwap', 'NeuralTextures']:
         dataset_path = f'{root}/manipulated_sequences/{args.dataset}/{args.comp}/'
-    # elif args.dataset in ['Celeb-real', 'Celeb-synthesis', 'YouTube-real']:
-    #     dataset_path = f'data/Celeb-DF-v2/{}/'.format(args.dataset)
+    elif args.dataset in ['Celeb-real', 'Celeb-synthesis', 'YouTube-real']:
+        dataset_path = f'{root_celeb}/{args.dataset}/'
     # elif args.dataset in ['DFDC']:
     #     dataset_path = f'data/{}/'.format(args.dataset)
     else:
