@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 sys.path.insert(0, "")
-from runs.supcon_config import configs as SupConTrainerConfig
+from runs.train.supcon_config import configs as SupConTrainerConfig
 from src.models import SupConResNet
 from src.losses import SupConLoss
 from src.optimizers import adjust_learning_rate, warmup_learning_rate
@@ -51,8 +51,6 @@ class SupConTrainer:
     def init_data(self):
         # TODO: add contrast transform here
         dataset = SupConDataset(self.configs.dataset, "train", None)
-        n = len(dataset)
-        # train_dataset, val_dataset = torch.utils.data.random_split(dataset, (n - n//20, n//20))
         self.train_dataloader = DataLoader(
             dataset,
             batch_size=self.configs.dataset.batch_size,
@@ -60,14 +58,6 @@ class SupConTrainer:
             shuffle=True,
             drop_last=True
         )
-        # self.val_dataloader = DataLoader(
-        #     val_dataset,
-        #     batch_size=self.configs.dataset.batch_size,
-        #     num_workers=self.configs.dataset.num_workers,
-        #     shuffle=False,
-        #     drop_last=True
-        # )
-
     def init_log(self):
         os.makedirs(self.configs.logs.log_folder, exist_ok=True)
         os.makedirs(self.configs.logs.checkpoints_dir, exist_ok=True)
@@ -88,8 +78,9 @@ class SupConTrainer:
         wandb.init(
             project=f"Deepfake Detection with Contrastive Learning",
             config=dict(self.configs),
-            id=self.configs.logs.name,
-            entity="duongnpc239"
+            id = self.configs.logs.time,
+            entity="duongnpc239",
+            dir="/mnt/data/duongdhk/tmp/wandb"
         )
 
         config_json = json.dumps(self.configs, indent=4)
@@ -165,10 +156,6 @@ class SupConTrainer:
                 'optimizer': self.optimizer.state_dict(),
                 'losses': losses,
             }, filename)
-
-            art = wandb.Artifact(f"{self.configs.logs.artifact}-{wandb.run.id}-best_model", type="model")
-            art.add_file(os.path.join(str(self.configs.logs.checkpoints_dir), "checkpoint_best_loss.pth"))
-            wandb.log_artifact(art)
             self.best_val_loss = losses["train_loss"]
 
         # log
