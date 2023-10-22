@@ -1,6 +1,8 @@
 import glob
 import os.path
 import random
+
+import cv2
 import numpy as np
 import pandas as pd
 
@@ -28,14 +30,21 @@ def get_list(src, des, path, name, label, n_frame=5):
     df.to_csv(os.path.join(des, f"{name}.csv"))
     print(len(df))
 
+def get_celeb_lips(src, des, path, name, label):
+    result = []
+    for video_fn in sorted(os.listdir(os.path.join(src, path, "frames"))):
+        image_list, landmarks_list = sorted(os.listdir(os.path.join(src, path, "frames", video_fn))), sorted(os.listdir(os.path.join(src, path, "landmarks", video_fn)))
 
-    # for fp, lp in zip(sorted(glob.glob(os.path.join(src, path, "frames/*/*.png"), recursive=True)), sorted(glob.glob(os.path.join(src, path, "landmarks/*/*.npy"), recursive=True))):
-    #     video = fp.split("/")[-2]
-    #     result.append([fp, lp, video, 1, name])
-    #
-    # df = pd.DataFrame(result, columns=["Image Path", "Landmarks Path", "Video", "Label", "Type"])
-    # df.to_csv(os.path.join(des, f"{name}.csv"))
-    # print(len(df))
+        # loop and save
+        for image_fn, landmarks_fn in zip(image_list, landmarks_list):
+            image_fp = os.path.join(src, path, "frames", video_fn, image_fn)
+            landmarks_fp = os.path.join(src, path, "landmarks", video_fn, landmarks_fn)
+            result.append([image_fp, landmarks_fp, video_fn, label, name])
+
+    df = pd.DataFrame(result, columns=["Image Path", "Landmarks Path", "Video", "Label", "Type"])
+    df.to_csv(os.path.join(des, f"{name}.csv"))
+    print(len(df))
+
 
 
 def process_ffpp():
@@ -65,17 +74,7 @@ def load_ffpp(list_folder, data_rate):
 
 
 
+    # get_celeb_lips()
+
 if __name__ == "__main__":
-    process_ffpp()
-    # data_rate = {
-    #     "original": 30000,
-    #     "DeepFakeDetection": 5000,
-    #     "Deepfakes": 5000,
-    #     "Face2Face": 5000,
-    #     "FaceShifter": 5000,
-    #     "FaceSwap": 5000,
-    #     "NeuralTextures": 5000,
-    # }
-    # results = load_ffpp("/mnt/data/duongdhk/datasets/processed_deepfake_detection_dataset/FFPP", data_rate)
-    # for a, b in results.items():
-    #     print(f"{a} {len(b)}")
+    load_ffpp()

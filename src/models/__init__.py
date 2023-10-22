@@ -1,2 +1,2 @@
-from .SupConModel import SupConResNet
+from .SupConModel import SupConResNet, LinearClassifier
 from .SBI import SBIDetector

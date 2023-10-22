@@ -37,3 +37,17 @@ class SupConResNet(nn.Module):
         feat = self.encoder(x)
         feat = F.normalize(self.head(feat), dim=1)
         return feat
+
+
+class LinearClassifier(nn.Module):
+    """Linear classifier"""
+    def __init__(self, name='resnet50', num_classes=10):
+        super(LinearClassifier, self).__init__()
+        _, feat_dim = model_dict[name]
+        self.fc1 = nn.Linear(feat_dim, 512)
+        self.fc2 = nn.Linear(512, num_classes)
+
+    def forward(self, features):
+        out = self.fc1(features)
+        out = self.fc2(out)
+        return out
