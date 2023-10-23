@@ -6,7 +6,7 @@ from ..items import VideoCrawlItem
 SEARCH_URL = "https://api.pexels.com/videos/search"
 
 # Your Pexel API KEY here
-API_KEY = ""
+API_KEY = "a9aepe75HdUG3pp4l1ev4dCuctijyaROdktSHLf1Os6EwXgXQ3rJheRZ"
 
 
 class PerxelCrawler(Spider):
@@ -14,8 +14,8 @@ class PerxelCrawler(Spider):
 
     query = "Short representation"
 
-    count = 20
-    per_page = 15
+    count = 100
+    per_page = 30
 
     def request(self, page_number: int):
         query = {"query": self.query, "page": 1, "per_page": self.per_page}
@@ -40,5 +40,5 @@ class PerxelCrawler(Spider):
                 file_urls=[video_file["link"]],
             )
 
-        if (int(resp["page"]) + 1) * self.per_page < int(self.count):
+        if (int(resp["page"]) + 1) * int(self.per_page) < int(self.count):
             yield self.request(page_number=response["page"] + 1)
