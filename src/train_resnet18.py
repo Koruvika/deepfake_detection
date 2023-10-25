@@ -34,8 +34,7 @@ def train(model, train_loader, optimizer, criterion, device):
         image, labels = data 
         image = image.to(device)
         labels = labels.to(device)
-        optimizer.zero_grad()
-
+        optimizer.zero_grad()   
         #Forward pass 
         outputs = model(image)
         #Calculate loss 
@@ -44,7 +43,7 @@ def train(model, train_loader, optimizer, criterion, device):
 
         # Calculate accuracy
         _, preds = torch.max(outputs.data, 1)
-        train_running_correct += (preds == labels).sum().item()
+        train_running_correct += torch.sum(preds == torch.max(labels, 1)).item()
         # Back propagation
         loss.backward()
         # Update the weights
@@ -78,7 +77,7 @@ def validate(model, testloader, criterion, device):
             valid_running_loss += loss.item()
             # Calculate the accuracy 
             _, preds = torch.max(outputs.data, 1)
-            valid_running_correct = (preds == labels).sum().item()
+            valid_running_correct = torch.sum(preds == torch.max(labels, 1)).item() 
 
     # Loss and accuracy for the complete epoch
     epoch_loss = valid_running_loss / counter 

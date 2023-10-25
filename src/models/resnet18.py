@@ -143,7 +143,7 @@ class Resnet(nn.Module):
         print('Dimension of the last convolutional feature map : ', x.shape)
 
         x = self.avgpool(x)
-        x = torch.flatten(x)
+        x = torch.flatten(x, 1)
         x = self.fc(x)
 
         return x 
