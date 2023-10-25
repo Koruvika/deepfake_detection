@@ -43,7 +43,7 @@ def train(model, train_loader, optimizer, criterion, device):
 
         # Calculate accuracy
         _, preds = torch.max(outputs.data, 1)
-        train_running_correct += torch.sum(preds == torch.max(labels, 1)).item()
+        train_running_correct += torch.sum(preds == torch.max(labels, 1).indices).item()
         # Back propagation
         loss.backward()
         # Update the weights
@@ -77,7 +77,7 @@ def validate(model, testloader, criterion, device):
             valid_running_loss += loss.item()
             # Calculate the accuracy 
             _, preds = torch.max(outputs.data, 1)
-            valid_running_correct = torch.sum(preds == torch.max(labels, 1)).item() 
+            valid_running_correct = torch.sum(preds == torch.max(labels, 1).indices).item() 
 
     # Loss and accuracy for the complete epoch
     epoch_loss = valid_running_loss / counter 
