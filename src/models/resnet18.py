@@ -140,7 +140,7 @@ class Resnet(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
         # Final spatial dimension of feature map should be (7,7) for all Resnets
-        print('Dimension of the last convolutional feature map : ', x.shape)
+        #print('Dimension of the last convolutional feature map : ', x.shape)
 
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
