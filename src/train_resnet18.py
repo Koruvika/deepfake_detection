@@ -120,7 +120,7 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True)
 
     # Initialize model
-    model = Resnet(img_channels=3, num_classes=2, block=BasicBlock, num_layers=18)
+    model = Resnet(img_channels=3, num_classes=2, block=BasicBlock, num_layers=18).to(device)
     plot_name = "resnet18"
 
     # Optimizer
