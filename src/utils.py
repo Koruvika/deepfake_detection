@@ -12,9 +12,43 @@ from PIL import Image
 from imgaug import augmenters as iaa
 from skimage import io
 from skimage import transform as sktransform
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
+def save_plots(train_acc, valid_acc, train_loss, valid_loss, output_dir, name=None):
+    """
+    Function to save the loss and accuracy plots to disk.
+    """
+    # Accuracy plots.
+    plt.figure(figsize=(10, 7))
+    plt.plot(
+        train_acc, color='tab:blue', linestyle='-', 
+        label='train accuracy'
+    )
+    plt.plot(
+        valid_acc, color='tab:red', linestyle='-', 
+        label='validataion accuracy'
+    )
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, name+'_accuracy.png'))
+    
+    # Loss plots.
+    plt.figure(figsize=(10, 7))
+    plt.plot(
+        train_loss, color='tab:blue', linestyle='-', 
+        label='train loss'
+    )
+    plt.plot(
+        valid_loss, color='tab:red', linestyle='-', 
+        label='validataion loss'
+    )
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, name+'_loss.png'))
 
 class RandomDownScale(alb.core.transforms_interface.ImageOnlyTransform):
     def apply(self, img, **params):
