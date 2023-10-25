@@ -108,22 +108,22 @@ if __name__ == "__main__":
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     class A:
-        deepfake_folders = args["deepfake_folders"]
-        original_folders = args["original_folders"]
+        deepfake_folders = args.deepfake_folders
+        original_folders = args.original_folders
     class B: 
-        test_root = args["test_root"]
+        test_root = args.test_root
     train_dataset = FFPPDataset(A, transforms=train_transform)
     val_dataset = CelebValidateDataset(B)
 
-    train_loader = DataLoader(train_dataset, batch_size=args["batch_size"], shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=args["batch_size"], shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True)
 
     # Initialize model
     model = Resnet(img_channels=3, num_classes=2, block=BasicBlock, num_layers=18)
     plot_name = "resnet18"
 
     # Optimizer
-    optimizer = optim.Adam(model.parameters(), lr=args["learning_rate"])
+    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
     # Loss function
     criterion = nn.CrossEntropyLoss()
 
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     train_loss, valid_loss = [], []
     train_acc, valid_acc = [], []
     # Start the training.
-    epochs = args["epochs"]
+    epochs = args.epochs
     for epoch in range(epochs):
         print(f"[INFO]: Epoch {epoch+1} of {epochs}")
         train_epoch_loss, train_epoch_acc = train(
@@ -161,8 +161,8 @@ if __name__ == "__main__":
         valid_acc, 
         train_loss, 
         valid_loss, 
-        output_dir=args["output_dir"],
+        output_dir=args.output_dir,
         name=plot_name
     )
-    torch.save(model, args["model_dir"])
+    torch.save(model, args.model_dir)
     print('TRAINING COMPLETE')

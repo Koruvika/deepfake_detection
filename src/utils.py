@@ -9,7 +9,6 @@ import albumentations as alb
 import cv2
 import numpy as np
 from PIL import Image
-from imgaug import augmenters as iaa
 from skimage import io
 from skimage import transform as sktransform
 import matplotlib.pyplot as plt
