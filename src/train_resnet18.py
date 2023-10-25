@@ -1,4 +1,4 @@
-from datasets import FFPPDataset, CelebValidateDataset
+from datasets.FFPPDataset import FFPPDataset, CelebValidateDataset
 import torch 
 import torch.nn as nn
 import torch.optim as optim
@@ -101,6 +101,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     train_transform = transforms.Compose([
+        transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ]) 
@@ -112,8 +113,8 @@ if __name__ == "__main__":
         original_folders = args.original_folders
     class B: 
         test_root = args.test_root
-    train_dataset = FFPPDataset(A, transforms=train_transform)
-    val_dataset = CelebValidateDataset(B)
+    train_dataset = FFPPDataset(A, transform=train_transform)
+    val_dataset = CelebValidateDataset(B, transform=train_transform)
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True)
@@ -131,7 +132,7 @@ if __name__ == "__main__":
     train_loss, valid_loss = [], []
     train_acc, valid_acc = [], []
     # Start the training.
-    epochs = args.epochs
+    epochs = args.epoch
     for epoch in range(epochs):
         print(f"[INFO]: Epoch {epoch+1} of {epochs}")
         train_epoch_loss, train_epoch_acc = train(

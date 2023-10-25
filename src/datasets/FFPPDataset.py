@@ -15,11 +15,11 @@ class FFPPDataset(Dataset):
         self.transform = transform 
         self.config = dataset_configs
 
-        self.image_label = [(image_fp, 1) \
+        self.image_label = [(os.path.join(deepfake_folder, image_folder, image_fp), 1) \
                         for deepfake_folder in self.config.deepfake_folders \
                         for image_folder in os.listdir(deepfake_folder) \
                         for image_fp in os.listdir(os.path.join(deepfake_folder, image_folder))]
-        self.image_label = self.image_label + [(image_fp, 0)\
+        self.image_label = self.image_label + [(os.path.join(original_folder, image_folder, image_fp), 0)\
                         for original_folder in self.config.original_folders \
                         for image_folder in os.listdir(original_folder) \
                         for image_fp in os.listdir(os.path.join(original_folder, image_folder))]
