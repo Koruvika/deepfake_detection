@@ -164,5 +164,5 @@ if __name__ == "__main__":
         output_dir=args.output_dir,
         name=plot_name
     )
-    torch.save(model, args.model_dir)
+    torch.save(model.state_dict(), args.model_dir)
     print('TRAINING COMPLETE')
