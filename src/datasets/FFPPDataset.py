@@ -57,7 +57,7 @@ class CelebValidateDataset(Dataset):
             im_fn = os.listdir(video)
             im_fp = [os.path.join(video, fn) for fn in im_fn]
             self.images_fp = self.images_fp + im_fp
-            self.label = self.label + [1 for _ in range(len(im_fn))]
+            self.label = self.label + [0 for _ in range(len(im_fn))]
 
         video_list1 = os.listdir(os.path.join(self.configs.test_root, "YouTube-real"))
         video_list1 = [os.path.join(self.configs.test_root, "YouTube-real", v) for v in video_list1]
@@ -65,7 +65,7 @@ class CelebValidateDataset(Dataset):
             im_fn = os.listdir(video)
             im_fp = [os.path.join(video, fn) for fn in im_fn]
             self.images_fp = self.images_fp + im_fp
-            self.label = self.label + [1 for _ in range(len(im_fn))]
+            self.label = self.label + [0 for _ in range(len(im_fn))]
 
         video_list1 = os.listdir(os.path.join(self.configs.test_root, "Celeb-synthesis"))
         video_list1 = [os.path.join(self.configs.test_root, "Celeb-synthesis", v) for v in video_list1]
@@ -73,7 +73,7 @@ class CelebValidateDataset(Dataset):
             im_fn = os.listdir(video)
             im_fp = [os.path.join(video, fn) for fn in im_fn]
             self.images_fp = self.images_fp + im_fp
-            self.label = self.label + [0 for _ in range(len(im_fn))]
+            self.label = self.label + [1 for _ in range(len(im_fn))]
 
     def __len__(self):
         return len(self.images_fp)
