@@ -10,16 +10,25 @@ import wandb
 from torch import optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+from torchvision import transforms
 
 sys.path.insert(0, "")
-from runs.train.supcon_config import configs as SupConTrainerConfig
-from src.models import SupConResNet
-from src.losses import SupConLoss
-from src.optimizers import adjust_learning_rate, warmup_learning_rate
+from runs.train.unimoco_config import configs as UniMoCoConfig
+from src.models import SingleGPUMoCo
+from src.losses import UnifiedContrastive
 from src.datasets import SupConDataset
+from src.transforms import GaussianBlur
+from src.optimizers import adjust_learning_rate, warmup_learning_rate
 
-class SupConTrainer:
-    def __init__(self, configs=SupConTrainerConfig):
+
+# TODO 1: Implement training code for UniMoCo
+    # TODO 1.1: Understand UniMoCo
+    # TODO 1.2: Understand Split Batch Normalization
+# TODO 2: Deal with problem about CelebDF dataset
+
+
+class UniMoCoTrainer:
+    def __init__(self, configs=UniMoCoConfig):
         self.configs = configs
         self.device = torch.device(self.configs.device)
 
@@ -40,24 +49,44 @@ class SupConTrainer:
         torch.backends.cudnn.benchmark = False
 
     def init_model(self):
-        self.model = SupConResNet(self.configs.model.base_model, self.configs.model.proj_head, self.configs.model.feat_dim, device=self.device)
-        self.criterion = SupConLoss(temperature=self.configs.loss.temperature)
+        self.model = SingleGPUMoCo(
+            dim=self.configs.model.dim,
+            K=self.configs.model.K,
+            m=self.configs.model.m,
+            T=self.configs.model.T,
+            arch=self.configs.model.arch,
+            bn_splits=self.configs.model.bn_splits,
+        ).to(self.device)
+
         self.optimizer = optim.SGD(self.model.parameters(),
-                                   lr=self.configs.opt.learning_rate,
-                                   momentum=self.configs.opt.momentum,
-                                   weight_decay=self.configs.opt.weight_decay)
-        self.scheduler = [adjust_learning_rate, warmup_learning_rate]
+                                   lr=self.configs.optimizer.lr,
+                                   momentum=self.configs.optimizer.momentum,
+                                   weight_decay=self.configs.optimizer.weight_decay)
+
+        self.criterion = UnifiedContrastive().to(self.device)
 
     def init_data(self):
-        # TODO: add contrast transforms here
-        dataset = SupConDataset(self.configs.dataset, "train", None)
+        train_transform = transforms.Compose([
+            transforms.RandomResizedCrop(160, scale=(0.2, 1.)),
+            transforms.RandomApply([
+                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+            ], p=0.8),
+            transforms.RandomGrayscale(p=0.2),
+            transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
+            transforms.RandomHorizontalFlip(),
+            transforms.Resize((160, 160)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+        dataset = SupConDataset(self.configs.dataset, "train", train_transform)
         self.train_dataloader = DataLoader(
             dataset,
             batch_size=self.configs.dataset.batch_size,
-            num_workers=self.configs.dataset.num_workers,
+            num_workers=self.configs.num_workers,
             shuffle=True,
             drop_last=True
         )
+
     def init_log(self):
         os.makedirs(self.configs.logs.log_folder, exist_ok=True)
         os.makedirs(self.configs.logs.checkpoints_dir, exist_ok=True)
@@ -76,7 +105,7 @@ class SupConTrainer:
         )
 
         wandb.init(
-            project=f"Deepfake Detection with Contrastive Learning",
+            project=f"Deepfake Detection with UniMoCo on Single GPU",
             config=dict(self.configs),
             id = self.configs.logs.time,
             entity="duongnpc239",
@@ -93,23 +122,22 @@ class SupConTrainer:
         self.model.train()
 
         losses = []
+        top1 = []
+        top5 = []
+
         for i, (images, labels, _) in enumerate(self.train_dataloader):
-            images = torch.cat([images[0], images[1]], dim=0)
-            images = images.to(self.device)
+            images[0] = images[0].to(self.device)
+            images[1] = images[1].to(self.device)
             labels = labels.to(self.device)
+            output, target, fake_targets = self.model(im_q=images[0], im_k=images[1], labels=labels)
 
-            warmup_learning_rate(self.configs.opt, epoch, i, len(self.train_dataloader), self.optimizer)
+            loss = self.criterion(output, target)
 
-            features = self.model(images)
-            f1, f2 = torch.split(features, [self.configs.dataset.batch_size, self.configs.dataset.batch_size], dim=0)
-            features = torch.cat([f1.unsqueeze(1), f2.unsqueeze(1)], dim=1)
-            loss = self.criterion(features, labels)
+            losses.append(loss.item())
 
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-
-            losses.append(loss.item())
 
             if i % self.configs.logs.log_interval == 0:
                 logging.info(
@@ -118,27 +146,11 @@ class SupConTrainer:
 
         return np.mean(losses)
 
-    def validate(self, validation_set):
-        self.model.eval()
-        val_losses = []
-        with torch.no_grad():
-            for i, (images, labels, _) in enumerate(validation_set):
-                images = torch.cat([images[0], images[1]], dim=0)
 
-                images = images.to(self.device)
-                labels = labels.to(self.device)
+    def validate(self, validate_set):
+        pass
 
-                features = self.model(images)
-                f1, f2 = torch.split(features, [self.configs.dataset.batch_size, self.configs.dataset.batch_size], dim=0)
-                features = torch.cat([f1.unsqueeze(1), f2.unsqueeze(1)], dim=1)
-                loss = self.criterion(features, labels)
-                val_losses.append(loss.item())
-
-        val_loss = np.mean(val_losses)
-        return val_loss
-
-
-    def log(self, epoch, losses):
+    def log(self, losses, epoch):
         if epoch % self.configs.logs.epoch_interval == 0:
             filename = os.path.join(str(self.configs.logs.checkpoints_dir), "checkpoint_epoch_" + str(epoch) + '.pth')
             save_checkpoint({
@@ -170,15 +182,23 @@ class SupConTrainer:
         )
 
     def run(self):
-        for epoch in range(1, self.configs.opt.epochs + 1):
-            adjust_learning_rate(self.configs.opt, self.optimizer, epoch)
+
+        for epoch in range(1, self.configs.optimizer.n_epochs + 1):
+            adjust_learning_rate(
+                self.optimizer,
+                epoch,
+                self.configs.optimizer.lr,
+                self.configs.optimizer.cosine,
+                self.configs.optimizer.lr_decay_rate,
+                self.configs.optimizer.n_epochs,
+                self.configs.optimizer.lr_decay_schedule,
+            )
             train_loss = self.train(epoch)
             losses = {
                 "train_loss": train_loss,
             }
-            self.log(epoch, losses)
+            self.log(losses, epoch)
         self.writer.close()
-
 
 def save_checkpoint(state, filename='checkpoint.pth'):
     torch.save(state, filename)
@@ -186,7 +206,7 @@ def save_checkpoint(state, filename='checkpoint.pth'):
 
 
 def main():
-    trainer = SupConTrainer()
+    trainer = UniMoCoTrainer()
     trainer.run()
 
 

@@ -78,26 +78,40 @@ class LinearDecayLR(_LRScheduler):
             lr=b_lr
         return [lr]
 
-def adjust_learning_rate(configs, optimizer, epoch):
-    lr = configs.learning_rate
-    if configs.cosine:
-        eta_min = lr * (configs.lr_decay_rate ** 3)
-        lr = eta_min + (lr - eta_min) * (
-                1 + math.cos(math.pi * epoch / configs.epochs)) / 2
+# def adjust_learning_rate(configs, optimizer, epoch):
+#     lr = configs.learning_rate
+#     if configs.cosine:
+#         eta_min = lr * (configs.lr_decay_rate ** 3)
+#         lr = eta_min + (lr - eta_min) * (
+#                 1 + math.cos(math.pi * epoch / configs.epochs)) / 2
+#     else:
+#         steps = np.sum(epoch > np.asarray(configs.lr_decay_epochs))
+#         if steps > 0:
+#             lr = lr * (configs.lr_decay_rate ** steps)
+#
+#     for param_group in optimizer.param_groups:
+#         param_group['lr'] = lr
+
+
+def adjust_learning_rate(optimizer, epoch, learning_rate, cosine, lr_decay_rate, n_epochs, lr_decay_epochs):
+    if cosine:
+        eta_min = learning_rate * (lr_decay_rate ** 3)
+        learning_rate = eta_min + (learning_rate - eta_min) * (1 + math.cos(math.pi * epoch / n_epochs)) / 2
     else:
-        steps = np.sum(epoch > np.asarray(configs.lr_decay_epochs))
+        steps = np.sum(epoch > np.asarray(lr_decay_epochs))
         if steps > 0:
-            lr = lr * (configs.lr_decay_rate ** steps)
+            learning_rate = learning_rate ** (lr_decay_rate ** steps)
 
     for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
+        param_group["lr"] = learning_rate
 
 
-def warmup_learning_rate(configs, epoch, batch_id, total_batches, optimizer):
-    if configs.warm and epoch <= configs.warm_epochs:
-        p = (batch_id + (epoch - 1) * total_batches) / \
-            (configs.warm_epochs * total_batches)
-        lr = configs.warmup_from + p * (configs.warmup_to - configs.warmup_from)
+def warmup_learning_rate(optimizer, epoch, batch_id, total_batches, warm, warm_epochs, warmup_from, warmup_to):
+    if warm and epoch <= warm_epochs:
+        p = (batch_id + (epoch - 1) * total_batches) / (warm_epochs * total_batches)
+        lr = warmup_from + p * (warmup_to - warmup_from)
+
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
+
 

@@ -57,7 +57,7 @@ class SupConDataset(Dataset):
         self.phase = phase
         self.filelist = pd.DataFrame(columns=["Image Path", "Landmarks Path", "Video", "Label", "Type"])
 
-        # contrastive transform
+        # contrastive transforms
         self.contrast_transform = contrast_transform
         if self.contrast_transform is None:
             self.contrast_transform = default_transform
@@ -74,6 +74,9 @@ class SupConDataset(Dataset):
         self.type_list = np.array(self.filelist["Type"])
 
         print(f"[Dataset] Init successfully!!")
+
+    def assign_transform(self, transform):
+        self.contrast_transform = TwoCropTransform(transform)
 
     def __len__(self):
         return len(self.filelist)
