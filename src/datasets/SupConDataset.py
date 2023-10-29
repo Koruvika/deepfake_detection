@@ -48,7 +48,7 @@ class TwoCropTransform:
 
 
 class SupConDataset(Dataset):
-    def __init__(self, dataset_config, phase="train", contrast_transform=None):
+    def __init__(self, dataset_config, phase="train", contrast_transform=None, use_contrast=True):
         super(SupConDataset, self).__init__()
 
         assert phase in ["train", "test", "val"]
@@ -61,7 +61,8 @@ class SupConDataset(Dataset):
         self.contrast_transform = contrast_transform
         if self.contrast_transform is None:
             self.contrast_transform = default_transform
-        self.contrast_transform = TwoCropTransform(self.contrast_transform)
+        if use_contrast:
+            self.contrast_transform = TwoCropTransform(self.contrast_transform)
 
         # read file list
         for csv_fp in data_csv:
@@ -245,7 +246,7 @@ class LinearDataset(Dataset):
         if self.transform is not None:
             image = self.transform(Image.fromarray(image))
 
-        label = one_hot_encoding(label, 2)
+        # label = one_hot_encoding(label, 2)
         return image, label
 
 
@@ -294,7 +295,56 @@ class CelebValidateDataset(Dataset):
         if self.transform is not None:
             image = self.transform(Image.fromarray(image))
 
-        label = one_hot_encoding(label, 2)
+        # label = one_hot_encoding(label, 2)
+        return image, label
+
+
+class CelebSupConDataset(Dataset):
+    def __init__(self, dataset_configs, phase="test", transform=None):
+        self.configs = dataset_configs
+        self.phase = phase
+        self.contrast_transform = TwoCropTransform(transform)
+
+        self.images_fp = []
+        self.label = []
+
+        video_list1 = os.listdir(os.path.join(self.configs.test_root, "Celeb-real"))
+        video_list1 = [os.path.join(self.configs.test_root, "Celeb-real", v) for v in video_list1]
+        for video in video_list1:
+            im_fn = os.listdir(video)
+            im_fp = [os.path.join(video, fn) for fn in im_fn]
+            self.images_fp = self.images_fp + im_fp
+            self.label = self.label + [1 for _ in range(len(im_fn))]
+
+        video_list1 = os.listdir(os.path.join(self.configs.test_root, "YouTube-real"))
+        video_list1 = [os.path.join(self.configs.test_root, "YouTube-real", v) for v in video_list1]
+        for video in video_list1:
+            im_fn = os.listdir(video)
+            im_fp = [os.path.join(video, fn) for fn in im_fn]
+            self.images_fp = self.images_fp + im_fp
+            self.label = self.label + [1 for _ in range(len(im_fn))]
+
+        video_list1 = os.listdir(os.path.join(self.configs.test_root, "Celeb-synthesis"))
+        video_list1 = [os.path.join(self.configs.test_root, "Celeb-synthesis", v) for v in video_list1]
+        for video in video_list1:
+            im_fn = os.listdir(video)
+            im_fp = [os.path.join(video, fn) for fn in im_fn]
+            self.images_fp = self.images_fp + im_fp
+            self.label = self.label + [0 for _ in range(len(im_fn))]
+
+    def __len__(self):
+        return len(self.images_fp)
+
+    def __getitem__(self, item):
+        image_fp = self.images_fp[item]
+        image = cv2.imread(image_fp, cv2.IMREAD_UNCHANGED)
+
+        label = self.label[item]
+
+        if self.contrast_transform is not None:
+            image = self.contrast_transform(Image.fromarray(image))
+
+        # label = one_hot_encoding(label, 2)
         return image, label
 
 

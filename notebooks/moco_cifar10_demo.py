@@ -303,8 +303,7 @@ def train(net, data_loader, train_optimizer, epoch, args):
         total_num += data_loader.batch_size
         total_loss += loss.item() * data_loader.batch_size
         train_bar.set_description(
-            'Train Epoch: [{}/{}], lr: {:.6f}, Loss: {:.4f}'.format(epoch, args.epochs, optimizer.param_groups[0]['lr'],
-                                                                    total_loss / total_num))
+            'Train Epoch: [{}/{}], lr: {:.6f}, Loss: {:.4f}'.format(epoch, args.epochs, optimizer.param_groups[0]['lr'], total_loss / total_num))
 
     return total_loss / total_num
 
@@ -330,6 +329,7 @@ def test(net, memory_data_loader, test_data_loader, epoch, args):
     with torch.no_grad():
         # generate feature bank
         for data, target in tqdm(memory_data_loader, desc='Feature extracting'):
+            print(data.shape)
             feature = net(data.cuda(non_blocking=True))
             feature = F.normalize(feature, dim=1)
             feature_bank.append(feature)

@@ -70,8 +70,6 @@ class SingleGPUMoCo(nn.Module):
         self.encoder_q = ModelBase(feature_dim=dim, arch=arch, bn_splits=bn_splits)
         self.encoder_k = ModelBase(feature_dim=dim, arch=arch, bn_splits=bn_splits)
 
-        print(self.encoder_q)
-
         for param_q, param_k in zip(self.encoder_q.parameters(), self.encoder_k.parameters()):
             param_k.data.copy_(param_q.data)  # initialize
             param_k.requires_grad = False  # not update by gradient

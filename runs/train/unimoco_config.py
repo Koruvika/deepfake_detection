@@ -8,10 +8,14 @@ configs = CfgNode()
 configs.seed = 42
 configs.device = "cuda:0"
 configs.num_workers = 6
+configs.knn_k = 200
+configs.knn_t = 0.1
+
 
 ## DATASET
 configs.dataset = CfgNode()
 configs.dataset.batch_size = 32
+configs.dataset.test_root = "/mnt/data/duongdhk/datasets/processed_deepfake_detection_dataset/Celeb-DF-v2/images"
 
 ## MODEL
 configs.model = CfgNode()
@@ -24,7 +28,7 @@ configs.model.bn_splits = 8  # change it
 
 ## OPTIMIZER
 configs.optimizer = CfgNode()
-configs.optimizer.lr = 0.03  #  * configs.dataset.batch_size / 256
+configs.optimizer.lr = 0.1  # 0.03  * configs.dataset.batch_size / 256
 configs.optimizer.momentum = 0.9
 configs.optimizer.weight_decay = 1e-4
 configs.optimizer.n_epochs = 200

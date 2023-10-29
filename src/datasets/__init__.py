@@ -1,1 +1,1 @@
-from .SupConDataset import SupConDataset, LinearDataset, CelebValidateDataset
+from .SupConDataset import SupConDataset, LinearDataset, CelebValidateDataset, CelebSupConDataset
