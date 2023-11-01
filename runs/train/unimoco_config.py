@@ -24,11 +24,11 @@ configs.model.K = 4096  # change it
 configs.model.m = 0.999
 configs.model.T = 0.07
 configs.model.arch = "resnet18"  # change it
-configs.model.bn_splits = 8  # change it
+configs.model.bn_splits = 4  # change it
 
 ## OPTIMIZER
 configs.optimizer = CfgNode()
-configs.optimizer.lr = 0.1  # 0.03  * configs.dataset.batch_size / 256
+configs.optimizer.lr = 0.03  * configs.dataset.batch_size / 256  # 0.1
 configs.optimizer.momentum = 0.9
 configs.optimizer.weight_decay = 1e-4
 configs.optimizer.n_epochs = 200

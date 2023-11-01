@@ -37,6 +37,7 @@ class UniMoCoTrainer:
 
         self.best_val_loss = 1e6
         self.best_val_acc = 0.
+        self.prev_val_acc = 0.
 
         self.init_seed()
         self.init_model()
@@ -171,19 +172,19 @@ class UniMoCoTrainer:
             train_bar.set_description(
                 'Train Epoch: [{}/{}], lr: {:.6f}, Loss: {:.4f}'.format(epoch, self.configs.optimizer.n_epochs,
                                                                         self.optimizer.param_groups[0]['lr'],
-                                                                        np.mean(losses)))
+                                                                        loss.item()))
 
             # if i % self.configs.logs.log_interval == 0:
             #     logging.info(
             #         f"Epoch {epoch} - {i}/{len(self.train_dataloader)}: Loss: {loss.item()}"
             #     )
 
-        return np.mean(losses)
+        return losses[-1]
 
 
     def validate(self):
         self.model.eval()
-        total_top1, total_top5, total_num, feature_bank = 0.0, 0.0, 0.0, []
+        total_top1, total_num, feature_bank = 0.0, 0.0, []
 
 
         with torch.no_grad():
@@ -245,7 +246,6 @@ class UniMoCoTrainer:
         )
 
     def run(self):
-
         for epoch in range(1, self.configs.optimizer.n_epochs + 1):
             adjust_learning_rate(
                 self.optimizer,
@@ -257,7 +257,11 @@ class UniMoCoTrainer:
                 self.configs.optimizer.lr_decay_schedule,
             )
             train_loss = self.train(epoch)
-            validate_acc = self.validate()
+            if epoch % 5 == 0:
+                validate_acc = self.validate()
+                self.prev_val_acc = validate_acc
+            else:
+                validate_acc = self.prev_val_acc
             losses = {
                 "train_loss": train_loss,
                 "validate_accuracy": validate_acc,
