@@ -64,7 +64,7 @@ def parse_argument():
                         help='number of nodes for distributed training')
     parser.add_argument('--rank', default=-1, type=int,
                         help='node rank for distributed training')
-    parser.add_argument('--dist-url', default='tcp://224.66.41.62:23456', type=str,
+    parser.add_argument('--dist-url', default='tcp://localhost:10001', type=str,
                         help='url used to set up distributed training')
     parser.add_argument('--dist-backend', default='nccl', type=str,
                         help='distributed backend')
@@ -129,7 +129,6 @@ def main_worker(gpu, ngpus_per_node, args):
 
     model = MultiGPUMoCo(dim=args.moco_dim, K=args.moco_k, m=args.moco_m,
                          T=args.moco_t, base_encoder=torchvision.models.__dict__[args.arch], mlp=args.mlp)
-    print(model)
 
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
@@ -229,22 +228,6 @@ def main_worker(gpu, ngpus_per_node, args):
     #     test_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
     #     num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
 
-    ### LOGGING
-    logging.basicConfig(
-        format='[%(asctime)s] [p%(process)s] [%(pathname)s:%(lineno)d] [%(levelname)s] %(message)s',
-        level=logging.INFO,
-        handlers=[
-            logging.FileHandler(args.log_file, mode='w'),
-            logging.StreamHandler()
-        ]
-    )
-
-    wandb.init(
-        project=f"Deepfake Detection with UniMoCo on Single GPU",
-        config=dict(args),
-        entity=args.entity
-    )
-
     ### TRAINING LOOP
     best_loss = 1e6
     for epoch in range(args.start_epoch, args.epochs):
@@ -320,6 +303,25 @@ def save_checkpoint(state, filename='checkpoint.pth'):
 
 def main():
     args = parse_argument()
+
+    ### LOGGING
+    logging.basicConfig(
+        format='[%(asctime)s] [p%(process)s] [%(pathname)s:%(lineno)d] [%(levelname)s] %(message)s',
+        level=logging.INFO,
+        handlers=[
+            logging.FileHandler(args.log_file, mode='w'),
+            logging.StreamHandler()
+        ]
+    )
+
+    wandb.init(
+        project=f"Deepfake Detection with UniMoCo on Single GPU",
+        config=dict(args),
+        entity=args.entity
+    )
+
+    logging.info(f"Argument: {args}")
+
 
     if args.seed is not None:
         random.seed(args.seed)
