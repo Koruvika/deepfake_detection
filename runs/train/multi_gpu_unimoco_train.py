@@ -34,7 +34,7 @@ def parse_argument():
     parser.add_argument('--test-root', metavar="DIR", help="path to test dataset")
 
     parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
-                        choices=["resnet18, resnet34, resnet50"])
+                        choices=["resnet18", "resnet34", "resnet50"])
     parser.add_argument('-j', '--workers', default=32, type=int, metavar='N',
                         help='number of data loading workers (default: 32)')
     parser.add_argument('--epochs', default=200, type=int, metavar='N',
