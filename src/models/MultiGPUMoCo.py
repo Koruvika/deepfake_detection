@@ -176,7 +176,7 @@ def concat_all_gather(tensor):
     return output
 
 
-class MultiGPUMoco(MoCo):
+class MultiGPUMoCo(MoCo):
     """
     build a UniMoCo model with the same hyper-parameter with MoCo
     """
