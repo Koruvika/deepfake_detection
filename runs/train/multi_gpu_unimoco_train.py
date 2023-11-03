@@ -15,6 +15,7 @@ import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
 import torchvision.transforms as transforms
+import torchvision.models
 import wandb
 from tqdm import tqdm
 from yacs.config import CfgNode
@@ -120,8 +121,14 @@ def main_worker(gpu, ngpus_per_node, args):
                                 world_size=args.world_size, rank=args.rank)
 
     ### MODEL
+
+    print("=> creating model '{}'".format(args.arch))
+    model_names = sorted(name for name in torchvision.models.__dict__
+                         if name.islower() and not name.startswith("__")
+                         and callable(torchvision.models.__dict__[name]))
+
     model = MultiGPUMoCo(dim=args.moco_dim, K=args.moco_k, m=args.moco_m,
-                         T=args.moco_t, arch=args.arch, mlp=args.mlp)
+                         T=args.moco_t, arch=torchvision.models.__dict__[args.arch], mlp=args.mlp)
     print(model)
 
     if args.distributed:
