@@ -9,24 +9,25 @@ import numpy as np
 import torch
 import wandb
 from torch import optim
+from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 from tqdm import tqdm
-from torch.nn import functional as F
+
 sys.path.insert(0, "")
 from runs.train.unimoco_config import configs as UniMoCoConfig
 from src.models import SingleGPUMoCo
 from src.losses import UnifiedContrastive
 from src.datasets import SupConDataset, CelebValidateDataset
 from src.transforms import GaussianBlur
-from src.optimizers import adjust_learning_rate, warmup_learning_rate
+from src.optimizers import adjust_learning_rate
 from src.metrics import knn_predict
 
 
 # TODO 1: Implement training code for UniMoCo
-    # TODO 1.1: Understand UniMoCo
-    # TODO 1.2: Understand Split Batch Normalization
+# TODO 1.1: Understand UniMoCo
+# TODO 1.2: Understand Split Batch Normalization
 # TODO 2: Deal with problem about CelebDF dataset
 
 
@@ -42,7 +43,7 @@ class UniMoCoTrainer:
         self.init_seed()
         self.init_model()
         self.init_data()
-        self.init_log()
+        # self.init_log()
 
     def init_seed(self):
         self.seed = self.configs.seed
@@ -139,7 +140,7 @@ class UniMoCoTrainer:
         wandb.init(
             project=f"Deepfake Detection with UniMoCo on Single GPU",
             config=dict(self.configs),
-            id = self.configs.logs.time,
+            id=self.configs.logs.time,
             entity="duongnpc239",
             dir="/mnt/data/duongdhk/tmp/wandb"
         )
@@ -181,11 +182,9 @@ class UniMoCoTrainer:
 
         return losses[-1]
 
-
     def validate(self):
         self.model.eval()
         total_top1, total_num, feature_bank = 0.0, 0.0, []
-
 
         with torch.no_grad():
             for data, target, _ in tqdm(self.memory_dataloader, desc="Feature Extraction"):
@@ -268,6 +267,7 @@ class UniMoCoTrainer:
             }
             self.log(losses, epoch)
         self.writer.close()
+
 
 def save_checkpoint(state, filename='checkpoint.pth'):
     torch.save(state, filename)

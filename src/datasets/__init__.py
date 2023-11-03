@@ -1,1 +1,1 @@
-from .SupConDataset import SupConDataset, LinearDataset, CelebValidateDataset, CelebSupConDataset
+from .SupConDataset import SupConDataset, LinearDataset, CelebValidateDataset, CelebSupConDataset, PreprocessedFaceForencisDataset

@@ -6,15 +6,23 @@ import datetime
 ## BASIC
 configs = CfgNode()
 configs.seed = 42
-configs.device = "cuda:0"
-configs.num_workers = 6
+
+configs.num_workers = 8
+configs.world_size = 1
+configs.rank = 0
+configs.dist_url = "tcp://localhost:10001"
+configs.dist_backend = "nccl"
+configs.device = [0, 1]
+configs.multiprocessing_distributed = True
+
 configs.knn_k = 200
 configs.knn_t = 0.1
 
 
 ## DATASET
 configs.dataset = CfgNode()
-configs.dataset.batch_size = 8
+configs.dataset.batch_size = 16
+configs.dataset.train_root = "/mnt/data/duongdhk/datasets/processed_deepfake_detection_dataset/processed_FFPP"
 configs.dataset.test_root = "/mnt/data/duongdhk/datasets/processed_deepfake_detection_dataset/Celeb-DF-v2/images"
 
 ## MODEL
@@ -23,7 +31,7 @@ configs.model.dim = 128  # change it
 configs.model.K = 4096  # change it
 configs.model.m = 0.999
 configs.model.T = 0.07
-configs.model.arch = "resnet50"  # change it
+configs.model.arch = "resnet18"  # change it
 configs.model.bn_splits = 4  # change it
 
 ## OPTIMIZER
@@ -70,3 +78,4 @@ configs.logs.name = f"UniMoCo with Single GPU"
 
 # RESUME
 configs.resume = None
+
