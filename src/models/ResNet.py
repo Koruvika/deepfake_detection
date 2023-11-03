@@ -137,7 +137,7 @@ def resnet101(**kwargs):
 
 model_dict = {
     'resnet18': [resnet18, 512],
-    'resnet34': [resnet34, 512],
+    'resnet34': [resnet34, 1024],
     'resnet50': [resnet50, 2048],
     'resnet101': [resnet101, 2048],
 }

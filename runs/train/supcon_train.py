@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 sys.path.insert(0, "")
-from runs.supcon_config import configs as SupConTrainerConfig
+from runs.train.supcon_config import configs as SupConTrainerConfig
 from src.models import SupConResNet
 from src.losses import SupConLoss
 from src.optimizers import adjust_learning_rate, warmup_learning_rate
@@ -49,25 +49,15 @@ class SupConTrainer:
         self.scheduler = [adjust_learning_rate, warmup_learning_rate]
 
     def init_data(self):
-        # TODO: add contrast transform here
+        # TODO: add contrast transforms here
         dataset = SupConDataset(self.configs.dataset, "train", None)
-        n = len(dataset)
-        train_dataset, val_dataset = torch.utils.data.random_split(dataset, (n - n//5, n//5))
         self.train_dataloader = DataLoader(
-            train_dataset,
+            dataset,
             batch_size=self.configs.dataset.batch_size,
             num_workers=self.configs.dataset.num_workers,
             shuffle=True,
-            drop_last=False
+            drop_last=True
         )
-        self.val_dataloader = DataLoader(
-            train_dataset,
-            batch_size=self.configs.dataset.batch_size,
-            num_workers=self.configs.dataset.num_workers,
-            shuffle=False,
-            drop_last=False
-        )
-
     def init_log(self):
         os.makedirs(self.configs.logs.log_folder, exist_ok=True)
         os.makedirs(self.configs.logs.checkpoints_dir, exist_ok=True)
@@ -88,8 +78,9 @@ class SupConTrainer:
         wandb.init(
             project=f"Deepfake Detection with Contrastive Learning",
             config=dict(self.configs),
-            id=self.configs.logs.name,
-            entity="duongnpc239"
+            id = self.configs.logs.time,
+            entity="duongnpc239",
+            dir="/mnt/data/duongdhk/tmp/wandb"
         )
 
         config_json = json.dumps(self.configs, indent=4)
@@ -101,6 +92,7 @@ class SupConTrainer:
     def train(self, epoch):
         self.model.train()
 
+        losses = []
         for i, (images, labels, _) in enumerate(self.train_dataloader):
             images = torch.cat([images[0], images[1]], dim=0)
             images = images.to(self.device)
@@ -117,12 +109,14 @@ class SupConTrainer:
             loss.backward()
             self.optimizer.step()
 
+            losses.append(loss.item())
 
             if i % self.configs.logs.log_interval == 0:
                 logging.info(
                     f"Epoch {epoch} - {i}/{len(self.train_dataloader)}: Loss: {loss.item()}"
                 )
 
+        return np.mean(losses)
 
     def validate(self, validation_set):
         self.model.eval()
@@ -154,42 +148,33 @@ class SupConTrainer:
                 'losses': losses,
             }, filename)
 
-        if losses["val_loss"] < self.best_val_loss:
-            filename = os.path.join(str(self.configs.logs.checkpoints_dir), "checkpoint_best_val_loss.pth")
+        if losses["train_loss"] < self.best_val_loss:
+            filename = os.path.join(str(self.configs.logs.checkpoints_dir), "checkpoint_best_loss.pth")
             save_checkpoint({
                 'epoch': epoch,
                 'model': self.model.state_dict(),
                 'optimizer': self.optimizer.state_dict(),
                 'losses': losses,
             }, filename)
-
-            art = wandb.Artifact(f"{self.configs.logs.artifact}-{wandb.run.id}-best_model", type="model")
-            art.add_file(os.path.join(str(self.configs.logs.checkpoints_dir), "checkpoint_best_val_loss.pth"))
-            wandb.log_artifact(art)
-            self.best_val_loss = losses["val_loss"]
+            self.best_val_loss = losses["train_loss"]
 
         # log
         self.writer.add_scalar("Train/Loss", losses["train_loss"], epoch)
-        self.writer.add_scalar("Validate/Loss", losses["val_loss"], epoch)
 
         wandb.log({
             "Train/Loss": losses["train_loss"],
-            "Validate/Loss": losses["val_loss"],
         })
 
         logging.info(
-            f"Epoch: {epoch}, Train/Loss: {losses['train_loss']}, Validate/Loss: {losses['val_loss']}"
+            f"Epoch: {epoch}, Train/Loss: {losses['train_loss']}"
         )
 
     def run(self):
-        for epoch in range(self.configs.opt.epochs):
+        for epoch in range(1, self.configs.opt.epochs + 1):
             adjust_learning_rate(self.configs.opt, self.optimizer, epoch)
-            self.train(epoch)
-            train_loss = self.validate(self.train_dataloader)
-            val_loss = self.validate(self.val_dataloader)
+            train_loss = self.train(epoch)
             losses = {
                 "train_loss": train_loss,
-                "val_loss": val_loss,
             }
             self.log(epoch, losses)
         self.writer.close()

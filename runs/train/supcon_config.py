@@ -11,7 +11,7 @@ configs.seed = 42
 
 # model
 configs.model = CfgNode()
-configs.model.base_model = "resnet18"
+configs.model.base_model = "resnet50"
 configs.model.proj_head = "linear"
 configs.model.feat_dim = 128
 
@@ -21,12 +21,12 @@ configs.loss.temperature = 0.07
 
 # dataset
 configs.dataset = CfgNode()
-configs.dataset.batch_size = 16
+configs.dataset.batch_size = 64
 configs.dataset.num_workers = 6
 
 # opt
 configs.opt = CfgNode()
-configs.opt.epochs = 200
+configs.opt.epochs = 100
 configs.opt.learning_rate = 0.05
 configs.opt.momentum = 0.9
 configs.opt.weight_decay = 1e-4
@@ -51,6 +51,7 @@ if configs.opt.warm:
 # log
 t = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 configs.logs = CfgNode()
+configs.logs.time = t
 configs.logs.log_interval = 10
 configs.logs.epoch_interval = 1
 configs.logs.checkpoints_dir = f'/mnt/data/duongdhk/checkpoints/contrast/contrast_{t}'
