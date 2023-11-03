@@ -1,2 +1,2 @@
 # from .SupConDataset import SupConDataset, LinearDataset, CelebValidateDataset, CelebSupConDataset, PreprocessedFaceForencisDataset
-from .SupConDataset import PreprocessedFaceForencisDataset
+from .ProcessedFFPP import PreprocessedFaceForencisDataset
