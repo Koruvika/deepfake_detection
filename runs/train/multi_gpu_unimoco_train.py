@@ -128,7 +128,7 @@ def main_worker(gpu, ngpus_per_node, args):
                          and callable(torchvision.models.__dict__[name]))
 
     model = MultiGPUMoCo(dim=args.moco_dim, K=args.moco_k, m=args.moco_m,
-                         T=args.moco_t, arch=torchvision.models.__dict__[args.arch], mlp=args.mlp)
+                         T=args.moco_t, base_encoder=torchvision.models.__dict__[args.arch], mlp=args.mlp)
     print(model)
 
     if args.distributed:
