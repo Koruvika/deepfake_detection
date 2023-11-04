@@ -196,9 +196,9 @@ class PreprocessedFaceForencisDataset(Dataset):
         if self.phase == 'train':
             if np.random.rand() < 0.5:
                 image, _, landmark, bbox = hflip(image, None, landmark, bbox)
-        print(f"[DEBUGGING] type of image {type(image)}")
-        print(f"[DEBUGGING] type of Image {type(Image)}")
-        print(f"[DEBUGGING] type of transform {type(self.contrast_transform)}")
+        # print(f"[DEBUGGING] type of image {type(image)}")
+        # print(f"[DEBUGGING] type of Image {type(Image)}")
+        # print(f"[DEBUGGING] type of transform {type(self.contrast_transform)}")
         # Contrastive Transform
         image = self.contrast_transform(Image.fromarray(image))
 
