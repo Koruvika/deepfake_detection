@@ -262,7 +262,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.train()
 
     train_bar = tqdm(train_loader)
-    for images, labels, _ in train_bar:
+    for images, labels in train_bar:
         # measure data loading time
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
