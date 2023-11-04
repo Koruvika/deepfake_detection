@@ -316,7 +316,7 @@ def main():
 
     wandb.init(
         project=f"Deepfake Detection with UniMoCo on Single GPU",
-        config=dict(args),
+        config=vars(args),
         entity=args.entity
     )
 
