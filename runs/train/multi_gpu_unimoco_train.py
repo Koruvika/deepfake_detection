@@ -95,6 +95,7 @@ def parse_argument():
                         help='use moco v2 data augmentation')
     parser.add_argument('--cos', action='store_true',
                         help='use cosine lr schedule')
+    parser.add_argument('--image-size', default=160)
 
     # logging
     parser.add_argument('--log-file', default="log.txt")
@@ -104,7 +105,7 @@ def parse_argument():
     return args
 
 
-def main_worker(gpu, ngpus_per_node, args):
+def main_worker(gpu, ngpus_per_node, args, run):
     args.gpu = gpu
 
     if args.gpu is not None:
@@ -174,7 +175,7 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.aug_plus:
         # MoCo v2's aug: similar to SimCLR https://arxiv.org/abs/2002.05709
         train_transform = transforms.Compose([
-            transforms.RandomResizedCrop(160, scale=(0.2, 1.)),
+            transforms.RandomResizedCrop(args.image_size, scale=(0.2, 1.)),
             transforms.RandomApply([
                 transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
             ], p=0.8),
@@ -187,7 +188,7 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         # MoCo v1's aug: the same as InstDisc https://arxiv.org/abs/1805.01978
         train_transform = transforms.Compose([
-            transforms.RandomResizedCrop(160, scale=(0.2, 1.)),
+            transforms.RandomResizedCrop(args.image_size, scale=(0.2, 1.)),
             transforms.RandomGrayscale(p=0.2),
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.4),
             transforms.RandomHorizontalFlip(),
@@ -249,7 +250,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 'losses': loss,
             }, "checkpoint_best_acc.pth")
 
-        wandb.log({
+        run.log({
             "Train/Loss": loss,
             "Learning Rate": lr,
         })
@@ -306,7 +307,7 @@ def save_checkpoint(state, filename='checkpoint.pth'):
 
 def main():
     args = parse_argument()
-
+    wandb.setup()
     ### LOGGING
     logging.basicConfig(
         format='[%(asctime)s] [p%(process)s] [%(pathname)s:%(lineno)d] [%(levelname)s] %(message)s',
@@ -317,13 +318,14 @@ def main():
         ]
     )
 
-    wandb.init(
+    run = wandb.init(
         project=f"Deepfake Detection with UniMoCo on Multi GPU",
         config=vars(args),
-        entity=args.entity
+        entity=args.entity,
+        group="DDP"
     )
 
-    logging.info(f"Argument: {args}")
+    print(f"[LOGGING] Wandb Initialized Successfully!!!")
 
 
     if args.seed is not None:
@@ -352,10 +354,10 @@ def main():
         args.world_size = ngpus_per_node * args.world_size
         # Use torch.multiprocessing.spawn to launch distributed processes: the
         # main_worker process function
-        mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
+        mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args, run))
     else:
         # Simply call main_worker function
-        main_worker(args.gpu, ngpus_per_node, args)
+        main_worker(args.gpu, ngpus_per_node, args, run)
 
 
 if __name__ == "__main__":
