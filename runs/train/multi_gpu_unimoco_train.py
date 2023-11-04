@@ -120,16 +120,15 @@ def main_worker(gpu, ngpus_per_node, args):
         dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
                                 world_size=args.world_size, rank=args.rank)
 
+    print(args)
     ### MODEL
-
-    print("=> creating model '{}'".format(args.arch))
     model_names = sorted(name for name in torchvision.models.__dict__
                          if name.islower() and not name.startswith("__")
                          and callable(torchvision.models.__dict__[name]))
 
     model = MultiGPUMoCo(dim=args.moco_dim, K=args.moco_k, m=args.moco_m,
                          T=args.moco_t, base_encoder=torchvision.models.__dict__[args.arch], mlp=args.mlp)
-    print(args)
+
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
         # should always set the single device scope, otherwise,
@@ -158,6 +157,7 @@ def main_worker(gpu, ngpus_per_node, args):
         # this code only supports DistributedDataParallel.
         raise NotImplementedError("Only DistributedDataParallel is supported.")
 
+    print(f"[LOGGING] Model Initialized Successfully!!!")
     ### LOSS
     criterion = UnifiedContrastive().cuda(args.gpu)
 
@@ -206,7 +206,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # test_dataset_config = CfgNode()
     # test_dataset_config.test_root = args.test_root
 
-    train_dataset = PreprocessedFaceForencisDataset(train_dataset_config, "train", train_transform)
+    train_dataset = PreprocessedFaceForencisDataset(train_dataset_config, "train", train_transform, using_contrast=True)
     # memory_dataset = PreprocessedFaceForencisDataset(train_dataset_config, "train", test_transform, False)
     # test_dataset = CelebValidateDataset(test_dataset_config, "test", test_transform)
 
@@ -228,7 +228,9 @@ def main_worker(gpu, ngpus_per_node, args):
     # test_loader = torch.utils.data.DataLoader(
     #     test_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
     #     num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
+    print(f"[LOGGING] Dataset Initialized Successfully!!!")
 
+    print("[INFO]: Start Training")
     ### TRAINING LOOP
     best_loss = 1e6
     for epoch in range(args.start_epoch, args.epochs):
