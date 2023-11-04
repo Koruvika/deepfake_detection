@@ -129,7 +129,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     model = MultiGPUMoCo(dim=args.moco_dim, K=args.moco_k, m=args.moco_m,
                          T=args.moco_t, base_encoder=torchvision.models.__dict__[args.arch], mlp=args.mlp)
-
+    print(args)
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
         # should always set the single device scope, otherwise,
@@ -315,7 +315,7 @@ def main():
     )
 
     wandb.init(
-        project=f"Deepfake Detection with UniMoCo on Single GPU",
+        project=f"Deepfake Detection with UniMoCo on Multi GPU",
         config=vars(args),
         entity=args.entity
     )
