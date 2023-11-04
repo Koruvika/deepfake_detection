@@ -201,7 +201,8 @@ def main_worker(gpu, ngpus_per_node, args):
     #     transforms.Normalize([0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010])
     # ])
     train_dataset_config = CfgNode()
-    train_dataset_config.train_root = args.train_root
+    train_dataset_config.dataset = CfgNode()
+    train_dataset_config.dataset.train_root = args.train_root
     # test_dataset_config = CfgNode()
     # test_dataset_config.test_root = args.test_root
 
